@@ -1,0 +1,5 @@
+<x-app-layout><x-slot name="header"><div><p class="eyebrow">STAY IN THE LOOP</p><h1>Notifications</h1></div></x-slot>
+<section class="panel">@forelse($notifications as $notification)<article class="list-row"><div><h3 class="font-semibold">{{ $notification->data['title'] ?? 'CRM update' }}</h3><p class="mt-1">{{ $notification->data['message'] ?? '' }}</p><p class="muted mt-2">{{ $notification->created_at->timezone(config('crm.timezone'))->format('d M Y H:i') }}</p>
+@if(!empty($notification->data['lead_id']))<a class="link" href="{{ route('leads.show',$notification->data['lead_id']) }}">Open enquiry</a>@endif</div>
+@if(!$notification->read_at)<form method="POST" action="{{ route('notifications.read',$notification->id) }}">@csrf @method('PATCH')<button class="btn-secondary">Mark read</button></form>@else<span class="muted">Read</span>@endif</article>@empty<p class="empty">You’re all caught up. Updates will appear here.</p>@endforelse<div class="mt-5">{{ $notifications->links() }}</div></section></x-app-layout>
+

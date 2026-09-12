@@ -1,0 +1,66 @@
+# Environment settings and credentials
+.env
+.env.*
+!.env.example
+/auth.json
+/storage/*.key
+
+# Dependencies: install PHP packages on the server; build frontend locally
+/vendor/
+/node_modules/
+
+# Production frontend assets MUST be committed for this deployment workflow.
+# Run npm run build locally and include the entire public/build directory.
+!/public/build/
+!/public/build/**
+
+# Development server markers and generated storage links
+/public/hot
+/public/storage
+/public/fonts-manifest.dev.json
+
+# Runtime files (retain Laravel's directory placeholder .gitignore files)
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+/storage/app/crm-preview/
+/storage/app/*.zip
+/storage/pail/
+*.log
+
+# Local databases and exports
+/database/*.sqlite
+/database/*.sqlite-*
+/database/*.db
+/database/*.db-*
+/*.sql
+/*.sql.gz
+/*.zip
+
+# Test and coverage output
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/coverage.xml
+/clover.xml
+
+# Editor, agent, and machine-specific settings
+/.codex/
+/.claude/
+/.cursor/
+/.idea/
+/.nova/
+/.vscode/
+/.zed/
+.phpactor.json
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Accidental local terminal-output files
+/firstOrFail()
+/only(\['name'
