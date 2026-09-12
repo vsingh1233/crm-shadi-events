@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name') }}</title>
+    <link rel="icon" type="image/webp" href="{{ asset('logo.webp') }}">
+<title>{{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +21,7 @@
         @endif
         {{ $slot }}
     </main>
-    <footer class="crm-footer">ShadiEvents · Thoughtfully planned, beautifully remembered <span>Times shown in Asia/Kolkata</span></footer>
+    <footer class="crm-footer"><div class="footer-brand"><x-application-logo class="footer-logo" /><span>Thoughtfully planned, beautifully remembered</span></div> <span>Times shown in Asia/Kolkata</span></footer>
 </body>
 </html>
 
