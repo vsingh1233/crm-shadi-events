@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token','lead_api_token_hash'])]
-class User extends Authenticatable
+#[Hidden(['password', 'remember_token', 'lead_api_token_hash'])]
+class User extends Authenticatable implements OAuthenticatable
 {
     public function isAdministrator(): bool
     {
@@ -21,7 +23,7 @@ class User extends Authenticatable
     }
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.

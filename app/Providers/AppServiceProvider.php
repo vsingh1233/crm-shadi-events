@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,5 +30,13 @@ class AppServiceProvider extends ServiceProvider
                 ->where('lead_api_token_expires_at', '>', now())
                 ->first();
         });
+
+        Passport::tokensCan([
+            'mcp:use' => 'Use the Shadi Events CRM assistant',
+        ]);
+
+        Passport::tokensExpireIn(now()->addHour());
+        Passport::refreshTokensExpireIn(now()->addDays(30));
+        Passport::authorizationView('mcp.authorize');
     }
 }

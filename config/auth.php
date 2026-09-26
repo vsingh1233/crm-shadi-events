@@ -37,17 +37,22 @@ return [
     |
     */
 
-  'guards' => [
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'users',
-    ],
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
 
-    'api' => [
-        'driver' => 'lead-api',
-        'provider' => 'users',
+        'api' => [
+            'driver' => 'lead-api',
+            'provider' => 'users',
+        ],
+
+        'mcp' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
-],
 
     /*
     |--------------------------------------------------------------------------
@@ -119,5 +124,4 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
-  
 ];
