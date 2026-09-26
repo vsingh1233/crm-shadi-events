@@ -15,7 +15,13 @@ class SaveLeadRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['email' => $this->email ? strtolower(trim($this->email)) : null]);
+        $email = $this->input('email');
+
+    if (is_string($email)) {
+        $this->merge([
+            'email' => strtolower(trim($email)) ?: null,
+        ]);
+    }
     }
 
     public function rules(): array

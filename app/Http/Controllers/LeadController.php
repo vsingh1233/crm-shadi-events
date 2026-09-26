@@ -101,19 +101,13 @@ class LeadController extends Controller
 
     public function store(SaveLeadRequest $request): RedirectResponse
     {
-        $lead = DB::transaction(function () use ($request) {
-            $lead = new Lead;
-            $this->fillLead($lead, $request);
-            $lead->owner_id = $request->user()->id;
-            $lead->created_by = $request->user()->id;
-            $lead->source = 'manual';
-            $lead->save();
-            $lead->recordChange('created', null, 'Manual enquiry', $request->user()->id);
+    $lead = app(\App\CreateLead::class)->create(
+        $request->validated(),
+        $request->user()
+    );
 
-            return $lead;
-        });
-
-        return to_route('leads.show', $lead)->with('success', 'Lead created successfully.');
+    return to_route('leads.show', $lead)
+        ->with('success', 'Lead created successfully.');
     }
 
     public function update(SaveLeadRequest $request, Lead $lead): RedirectResponse
@@ -146,46 +140,10 @@ class LeadController extends Controller
         $lead->lost_reason = $data['status'] === 'lost' ? $data['lost_reason'] : null;
     }
 
-    private function checkDuplicates(Lead $lead, array $data, bool $confirmed): void
-    {
-        if ($lead->exists) {
-            $unchanged = true;
-            foreach (['email', 'phone', 'wedding_location', 'wedding_start_date', 'wedding_end_date'] as $field) {
-                $before = str_starts_with($field, 'wedding_') && str_ends_with($field, '_date') ? $lead->$field?->format('Y-m-d') : $lead->$field;
-                if (($data[$field] ?? null) !== $before) {
-                    $unchanged = false;
-                }
-            }
-            if ($unchanged) {
-                return;
-            }
-        }
-        $phone = Lead::normalizePhone($data['phone'] ?? null);
-        $matches = Lead::withTrashed()->where(function ($q) use ($data, $phone) {
-            $q->whereRaw('1 = 0');
-            if (! empty($data['email'])) {
-                $q->orWhere('email', $data['email']);
-            }
-            if ($phone) {
-                $q->orWhere('normalized_phone', $phone);
-            }
-        })->when($lead->exists, fn ($q) => $q->where('id', '!=', $lead->id))->get();
-        foreach ($matches as $match) {
-            $known = ! empty($data['wedding_location']) && $match->wedding_location && ! empty($data['wedding_start_date']) && ! empty($data['wedding_end_date']) && $match->wedding_start_date && $match->wedding_end_date;
-            if (! $known) {
-                if (! $confirmed) {
-                    throw ValidationException::withMessages(['confirm_duplicate' => 'A matching contact exists, but wedding details are incomplete. Review the enquiry and confirm below to save.']);
-                }
-
-                continue;
-            }
-            $differentLocation = mb_strtolower(trim($data['wedding_location'])) !== mb_strtolower(trim($match->wedding_location));
-            $differentDates = $data['wedding_start_date'] !== $match->wedding_start_date->format('Y-m-d') || $data['wedding_end_date'] !== $match->wedding_end_date->format('Y-m-d');
-            if (! $differentLocation || ! $differentDates) {
-                throw ValidationException::withMessages(['email' => 'This contact already has an enquiry. Both wedding location and dates must differ for a separate lead; otherwise update the existing lead or ask an administrator.']);
-            }
-        }
-    }
+private function checkDuplicates(Lead $lead, array $data, bool $confirmed): void
+{
+    app(\App\LeadDuplicateChecker::class)->check($lead, $data, $confirmed);
+}
 
     public function team(Request $request, Lead $lead): RedirectResponse
     {
@@ -270,4 +228,6 @@ class LeadController extends Controller
         $lead->load('collaborators', 'owner');
         $lead->collaborators->push($lead->owner)->unique('id')->where('id', '!=', $actor)->each(fn ($user) => $user->notify(new CrmNotification($title, 'An enquiry you are involved in has changed.', $lead->id)));
     }
+
+    
 }

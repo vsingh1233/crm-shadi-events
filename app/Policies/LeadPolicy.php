@@ -31,4 +31,11 @@ class LeadPolicy
     {
         return $this->delete($user, $lead);
     }
+
+    public function createViaApi(User $user): bool
+    {
+    return $user->is_active
+        && $user->can_create_leads_via_api
+        && in_array($user->role, ['administrator', 'team_member'], true);
+    }
 }
