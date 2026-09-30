@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\CreateLead;
 use App\Http\Requests\SaveLeadRequest;
+use App\LeadDuplicateChecker;
 use App\Models\Lead;
 use App\Models\User;
 use App\Notifications\CrmNotification;
@@ -24,7 +26,7 @@ class LeadController extends Controller
             'date_from' => ['nullable', 'date_format:Y-m-d'], 'date_to' => ['nullable', 'date_format:Y-m-d'],
             'follow_up' => ['nullable', 'string', 'max:20'], 'sort' => ['nullable', 'string', 'max:100'],
             'direction' => ['nullable', 'string', 'max:20'], 'archived' => ['nullable', 'boolean'],
-        ]);
+        ], [], ['temperature' => 'Lead Quality']);
         $query = Lead::visibleTo($request->user())->with('owner');
         if ($request->boolean('archived') && $request->user()->isAdministrator()) {
             $query->onlyTrashed();
@@ -89,7 +91,7 @@ class LeadController extends Controller
         Gate::authorize('view', $lead);
         $lead->load(['owner', 'creator', 'collaborators']);
         $timeline = $lead->activities()->with('user')->get()->map(fn ($a) => ['time' => $a->occurred_at, 'recorded' => $a->created_at, 'kind' => $a->type, 'text' => $a->notes, 'by' => $a->user?->name])
-            ->concat($lead->changes()->with('user')->get()->map(fn ($c) => ['time' => $c->created_at, 'recorded' => $c->created_at, 'kind' => str_replace('_', ' ', $c->field), 'text' => ($c->old_value ?? '—').' → '.($c->new_value ?? '—'), 'by' => $c->user?->name ?? 'System']))
+            ->concat($lead->changes()->with('user')->get()->map(fn ($c) => ['time' => $c->created_at, 'recorded' => $c->created_at, 'kind' => $c->field === 'temperature' ? 'Lead Quality' : str_replace('_', ' ', $c->field), 'text' => ($c->old_value ?? '—').' → '.($c->new_value ?? '—'), 'by' => $c->user?->name ?? 'System']))
             ->sortByDesc('time');
 
         return view('leads.show', compact('lead', 'timeline') + [
@@ -101,13 +103,13 @@ class LeadController extends Controller
 
     public function store(SaveLeadRequest $request): RedirectResponse
     {
-    $lead = app(\App\CreateLead::class)->create(
-        $request->validated(),
-        $request->user()
-    );
+        $lead = app(CreateLead::class)->create(
+            $request->validated(),
+            $request->user()
+        );
 
-    return to_route('leads.show', $lead)
-        ->with('success', 'Lead created successfully.');
+        return to_route('leads.show', $lead)
+            ->with('success', 'Lead created successfully.');
     }
 
     public function update(SaveLeadRequest $request, Lead $lead): RedirectResponse
@@ -140,10 +142,10 @@ class LeadController extends Controller
         $lead->lost_reason = $data['status'] === 'lost' ? $data['lost_reason'] : null;
     }
 
-private function checkDuplicates(Lead $lead, array $data, bool $confirmed): void
-{
-    app(\App\LeadDuplicateChecker::class)->check($lead, $data, $confirmed);
-}
+    private function checkDuplicates(Lead $lead, array $data, bool $confirmed): void
+    {
+        app(LeadDuplicateChecker::class)->check($lead, $data, $confirmed);
+    }
 
     public function team(Request $request, Lead $lead): RedirectResponse
     {
@@ -228,6 +230,4 @@ private function checkDuplicates(Lead $lead, array $data, bool $confirmed): void
         $lead->load('collaborators', 'owner');
         $lead->collaborators->push($lead->owner)->unique('id')->where('id', '!=', $actor)->each(fn ($user) => $user->notify(new CrmNotification($title, 'An enquiry you are involved in has changed.', $lead->id)));
     }
-
-    
 }

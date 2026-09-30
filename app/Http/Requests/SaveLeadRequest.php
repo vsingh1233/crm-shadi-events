@@ -17,11 +17,18 @@ class SaveLeadRequest extends FormRequest
     {
         $email = $this->input('email');
 
-    if (is_string($email)) {
-        $this->merge([
-            'email' => strtolower(trim($email)) ?: null,
-        ]);
+        if (is_string($email)) {
+            $this->merge([
+                'email' => strtolower(trim($email)) ?: null,
+            ]);
+        }
     }
+
+    public function attributes(): array
+    {
+        return [
+            'temperature' => 'Lead Quality',
+        ];
     }
 
     public function rules(): array
