@@ -69,7 +69,7 @@
             <table>
                 <thead>
                     <tr>
-                        @foreach (['Client', 'Contact', 'Wedding', 'Stage', 'Lead Quality', 'Owner', 'Created'] as $title)
+                        @foreach (['Client', 'Couple name', 'Contact', 'Wedding', 'Stage', 'Lead Quality', 'Owner', 'Created'] as $title)
                             <th scope="col">{{ $title }}</th>
                         @endforeach
                     </tr>
@@ -84,12 +84,9 @@
                                         class="link">Restore</button></form>@else<a class="link"
                                         href="{{ route('leads.show', $lead) }}">{{ $lead->name }}</a>
                                 @endif
-                                @if ($lead->couple_name)
-                                    <p class="muted">{{ $lead->couple_name }}</p>
-                                @endif
                                 <p class="muted">{{ $lead->client_location ?? 'Location not provided' }}</p>
                             </td>
-
+                            <td>{{ $lead->couple_name ?: '—' }}</td>
                             <td>{{ $lead->phone ?? '—' }}<p class="muted">{{ $lead->email ?? '—' }}</p>
                             </td>
                             <td>{{ $lead->wedding_location ?? 'Undecided' }}<p class="muted">
@@ -106,7 +103,7 @@
                                 {{ $lead->created_at->timezone(config('crm.timezone'))->format('d M Y') }}</td>
                         </tr>
                     @empty<tr>
-                            <td colspan="7" class="empty">No enquiries match these filters.</td>
+                            <td colspan="8" class="empty">No enquiries match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>
