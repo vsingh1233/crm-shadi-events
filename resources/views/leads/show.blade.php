@@ -3,7 +3,7 @@
 <div class="detail-columns"><div>
 <section class="panel"><div class="section-head"><h2>The details</h2><span class="temperature {{ $lead->temperature }}">{{ ucfirst($lead->temperature ?? 'Unassessed') }}</span></div>
 <dl class="details-grid">
-@foreach(['Email'=>$lead->email,'Phone'=>$lead->phone,'Client location'=>$lead->client_location,'Wedding location'=>$lead->wedding_location,'Wedding start'=>$lead->wedding_start_date?->format('d M Y'),'Wedding end'=>$lead->wedding_end_date?->format('d M Y'),'Owner'=>$lead->owner->name,'Created by'=>$lead->creator->name,'Source'=>ucfirst($lead->source),'Created'=>$lead->created_at->timezone(config('crm.timezone'))->format('d M Y H:i'),'Updated'=>$lead->updated_at->timezone(config('crm.timezone'))->format('d M Y H:i')] as $label=>$value)
+@foreach(['Couple name'=>$lead->couple_name,'Email'=>$lead->email,'Phone'=>$lead->phone,'Client location'=>$lead->client_location,'Wedding location'=>$lead->wedding_location,'Wedding start'=>$lead->wedding_start_date?->format('d M Y'),'Wedding end'=>$lead->wedding_end_date?->format('d M Y'),'Owner'=>$lead->owner->name,'Created by'=>$lead->creator->name,'Source'=>ucfirst($lead->source),'Created'=>$lead->created_at->timezone(config('crm.timezone'))->format('d M Y H:i'),'Updated'=>$lead->updated_at->timezone(config('crm.timezone'))->format('d M Y H:i')] as $label=>$value)
 <div><dt>{{ $label }}</dt><dd>{{ $value ?? 'Not provided' }}</dd></div>@endforeach
 @if($lead->lost_reason)<div class="full-width"><dt>Lost reason</dt><dd>{{ $lead->lost_reason }}</dd></div>@endif
 </dl></section>

@@ -15,8 +15,10 @@
 
         <p class="mt-4">
             This connection can use the CRM assistant tools permitted
-            for your account, including creating leads and their
-            discussion notes.
+            for your account, including creating and searching leads,
+            reading lead details, updating couple names, and scheduling,
+            completing or cancelling follow-ups. It can only access
+            leads that your account is allowed to view.
         </p>
 
         @if (count($scopes) > 0)

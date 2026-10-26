@@ -187,6 +187,17 @@ class CreateWhatsappLead extends Tool
             $input[$field] = $value;
         }
 
+        $coupleName = $request->get('couple_name');
+
+        if (is_string($coupleName)) {
+            $coupleName = trim($coupleName);
+            $coupleName = $coupleName === '' ? null : $coupleName;
+        }
+
+        if ($coupleName !== null) {
+            $input['couple_name'] = $coupleName;
+        }
+
         if (is_string($input['email'])) {
             $input['email'] = strtolower($input['email']);
         }
@@ -200,6 +211,7 @@ class CreateWhatsappLead extends Tool
      *     replayed: bool,
      *     lead_id: int,
      *     name: string,
+     *     couple_name: string|null,
      *     url: string
      * }
      */
@@ -210,6 +222,7 @@ class CreateWhatsappLead extends Tool
             'replayed' => $replayed,
             'lead_id' => (int) $lead->id,
             'name' => $lead->name,
+            'couple_name' => $lead->couple_name,
             'url' => route('leads.show', $lead),
         ];
     }
@@ -230,6 +243,14 @@ class CreateWhatsappLead extends Tool
             'name' => $schema->string()
                 ->description('The client name confirmed by the user.')
                 ->required(),
+
+            'couple_name' => $schema->string()
+                ->description(
+                    'Confirmed couple names, for example Anjali & Garima. '
+                    .'Preserve the provided order. Omit when either name is unknown; '
+                    .'do not infer the partner name.'
+                )
+                ->nullable(),
 
             'email' => $schema->string()
                 ->description(

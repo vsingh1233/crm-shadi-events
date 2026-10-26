@@ -16,6 +16,7 @@ class CreateLead
     /**
      * @param array{
      *     name: string,
+     *     couple_name?: string|null,
      *     email?: string|null,
      *     phone?: string|null,
      *     client_location?: string|null,
@@ -51,6 +52,7 @@ class CreateLead
 
             foreach ([
                 'name',
+                'couple_name',
                 'email',
                 'phone',
                 'client_location',

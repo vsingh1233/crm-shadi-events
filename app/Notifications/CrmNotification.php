@@ -16,7 +16,7 @@ class CrmNotification extends Notification implements ShouldQueue
 
     public int $tries = 5;
 
-    public function __construct(public string $title, public string $message, public ?int $leadId = null, public ?int $followUpId = null, public ?string $dueAt = null, public bool $adminOnly = false)
+    public function __construct(public string $title, public string $message, public ?int $leadId = null, public ?int $followUpId = null, public ?string $dueAt = null, public bool $adminOnly = false, public ?string $reminderQueuedAt = null)
     {
         $this->onConnection('database');
     }
@@ -54,6 +54,10 @@ class CrmNotification extends Notification implements ShouldQueue
         if ($this->followUpId) {
             $followUp = FollowUp::find($this->followUpId);
             if (! $followUp || $followUp->status !== 'pending' || $followUp->responsible_id !== $user->id || $followUp->due_at->format('Y-m-d H:i:s') !== $this->dueAt || $lead->isClosed()) {
+                return false;
+            }
+            if (($this->reminderQueuedAt ?? null) !== null
+                && $followUp->reminder_queued_at?->format('Y-m-d H:i:s') !== $this->reminderQueuedAt) {
                 return false;
             }
         }

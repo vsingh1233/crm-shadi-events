@@ -35,6 +35,7 @@ class SaveLeadRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'couple_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'required_without:phone', 'email', 'max:255'],
             'phone' => ['nullable', 'required_without:email', 'string', 'max:30', 'regex:/^\+?[0-9 () .-]{6,30}$/'],
             'client_location' => ['nullable', 'string', 'max:255'],

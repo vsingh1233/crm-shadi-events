@@ -49,6 +49,31 @@ class Lead extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function scopeSearch(Builder $query, string $search): Builder
+    {
+        $search = trim($search);
+        if ($search === '') {
+            return $query;
+        }
+        $parts = preg_split('/(?:\s*&\s*|\s+and\s+|\s+)/iu', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return $query->where(function (Builder $query) use ($search, $parts): void {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+            if ($phone = self::normalizePhone($search)) {
+                $query->orWhere('normalized_phone', 'like', "%{$phone}%");
+            }
+            if ($parts !== []) {
+                $query->orWhere(function (Builder $query) use ($parts): void {
+                    foreach ($parts as $part) {
+                        $query->whereRaw('LOWER(couple_name) LIKE ?', ['%'.mb_strtolower($part).'%']);
+                    }
+                });
+            }
+        });
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

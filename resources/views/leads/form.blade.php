@@ -3,7 +3,7 @@
 <p class="muted mb-6">Name and a phone number or email are required. Wedding details can come later. Use a country code
     for international phone numbers.</p>
 <div class="form-grid">
-    @foreach ([['name', 'Client name', 'text'], ['email', 'Email address', 'email'], ['phone', 'Phone number', 'tel'], ['client_location', 'Client location', 'text'], ['wedding_location', 'Preferred wedding location', 'text'], ['wedding_start_date', 'Wedding start date', 'date'], ['wedding_end_date', 'Wedding end date', 'date']] as [$field, $label, $type])
+    @foreach ([['name', 'Client name', 'text'], ['couple_name', 'Couple name', 'text'], ['email', 'Email address', 'email'], ['phone', 'Phone number', 'tel'], ['client_location', 'Client location', 'text'], ['wedding_location', 'Preferred wedding location', 'text'], ['wedding_start_date', 'Wedding start date', 'date'], ['wedding_end_date', 'Wedding end date', 'date']] as [$field, $label, $type])
         <label>{{ $label }} @if ($field === 'name')
                 <span aria-hidden="true">*</span>
             @endif

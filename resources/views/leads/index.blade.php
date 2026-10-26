@@ -7,7 +7,7 @@
     </x-slot>
     <form method="GET" class="panel filter-panel">
         <div class="filter-grid">
-            <label>Search<input name="search" value="{{ request('search') }}" placeholder="Name, email or phone"></label>
+            <label>Search<input name="search" value="{{ request('search') }}" placeholder="Client, couple, email or phone"></label>
             <label>Status<select name="status">
                     <option value="">All stages</option>
                     @foreach (\App\Models\Lead::STATUSES as $value => $label)
@@ -84,8 +84,12 @@
                                         class="link">Restore</button></form>@else<a class="link"
                                         href="{{ route('leads.show', $lead) }}">{{ $lead->name }}</a>
                                 @endif
+                                @if ($lead->couple_name)
+                                    <p class="muted">{{ $lead->couple_name }}</p>
+                                @endif
                                 <p class="muted">{{ $lead->client_location ?? 'Location not provided' }}</p>
                             </td>
+
                             <td>{{ $lead->phone ?? '—' }}<p class="muted">{{ $lead->email ?? '—' }}</p>
                             </td>
                             <td>{{ $lead->wedding_location ?? 'Undecided' }}<p class="muted">

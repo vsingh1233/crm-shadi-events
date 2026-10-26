@@ -31,14 +31,7 @@ class LeadController extends Controller
         if ($request->boolean('archived') && $request->user()->isAdministrator()) {
             $query->onlyTrashed();
         }
-        if ($search = trim((string) $request->query('search', ''))) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%");
-                if ($phone = Lead::normalizePhone($search)) {
-                    $q->orWhere('normalized_phone', 'like', "%{$phone}%");
-                }
-            });
-        }
+        $query->search((string) $request->query('search', ''));
         foreach (['status', 'temperature', 'owner_id'] as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->input($field));
@@ -136,7 +129,7 @@ class LeadController extends Controller
     {
         $data = $request->validated();
         $this->checkDuplicates($lead, $data, $request->boolean('confirm_duplicate'));
-        foreach (['name', 'email', 'phone', 'client_location', 'wedding_location', 'wedding_start_date', 'wedding_end_date', 'temperature', 'status'] as $field) {
+        foreach (['name', 'couple_name', 'email', 'phone', 'client_location', 'wedding_location', 'wedding_start_date', 'wedding_end_date', 'temperature', 'status'] as $field) {
             $lead->$field = $data[$field] ?? null;
         }
         $lead->lost_reason = $data['status'] === 'lost' ? $data['lost_reason'] : null;
