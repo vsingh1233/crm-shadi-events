@@ -172,4 +172,76 @@ class FollowUpReminderTest extends TestCase
         $this->assertDatabaseCount('notifications', 1);
         $this->assertNotNull($followUp->fresh()->reminder_queued_at);
     }
+
+    public function test_branded_email_uses_current_lead_details_and_includes_the_lead_url(): void
+    {
+        $this->travelTo(now()->setDate(2026, 10, 28)->setTime(4, 30));
+        $followUp = $this->followUp();
+        $notification = new CrmNotification('Follow-up due', 'Old queued summary', $followUp->lead_id, $followUp->id);
+        $lead = $followUp->lead;
+        $lead->name = 'Puneet';
+        $lead->couple_name = 'Jyoti & Ankit';
+        $lead->phone = '9953150983';
+        $lead->email = 'puneet@example.test';
+        $lead->client_location = 'Kanpur';
+        $lead->wedding_location = 'Jaypee Agra';
+        $lead->wedding_start_date = '2026-12-09';
+        $lead->wedding_end_date = '2026-12-11';
+        $lead->status = 'proposal_sent';
+        $lead->temperature = 'warm';
+        $lead->source = 'whatsapp';
+        $lead->save();
+        $mail = $notification->toMail($followUp->responsible);
+        $this->assertSame('Follow-up due: Jyoti & Ankit · Puneet', $mail->subject);
+        $html = view($mail->view['html'], $mail->viewData)->render();
+        foreach (['Puneet', 'Jyoti &amp; Ankit', 'Kanpur', 'Jaypee Agra', '09 Dec 2026', '11 Dec 2026', 'Proposal Sent', 'Warm', 'Whatsapp', '28 Oct 2026, 10:00 IST', 'tel:9953150983', 'mailto:puneet@example.test', 'Open lead in CRM', route('leads.show', $lead), '#6B2A38', 'DUE NOW'] as $content) {
+            $this->assertStringContainsString($content, $html);
+        }
+        $this->assertStringNotContainsString('Old queued summary', $html);
+        $text = view($mail->view['text'], $mail->viewData)->render();
+        $this->assertStringContainsString('Jyoti & Ankit', $text);
+        $this->assertStringContainsString(route('leads.show', $lead), $text);
+
+        if (getenv('CRM_CAPTURE_PREVIEWS') === '1') {
+            $directory = storage_path('app/crm-preview');
+            if (! is_dir($directory)) {
+                mkdir($directory, 0777, true);
+            }
+            file_put_contents($directory.'/follow-up-email.html', $html);
+        }
+    }
+
+    public function test_branded_email_escapes_notes_and_handles_missing_fields_and_overdue_dates(): void
+    {
+        $this->freezeTime();
+        $followUp = $this->followUp();
+        $followUp->due_at = now()->subDay();
+        $followUp->notes = "Call the client\n<script>alert('unsafe')</script>";
+        $followUp->save();
+        $lead = $followUp->lead;
+        $lead->couple_name = null;
+        $lead->email = null;
+        $lead->phone = null;
+        $lead->wedding_start_date = null;
+        $lead->save();
+        $mail = (new CrmNotification('Due', 'Queued summary', $lead->id, $followUp->id))->toMail($followUp->responsible);
+        $html = view($mail->view['html'], $mail->viewData)->render();
+        $this->assertSame('Follow-up overdue: Planner', $mail->subject);
+        $this->assertStringContainsString('OVERDUE', $html);
+        $this->assertStringContainsString('Not provided', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('<br', $html);
+        $this->assertStringNotContainsString('href="tel:', $html);
+        $this->assertStringNotContainsString('href="mailto:', $html);
+    }
+
+    public function test_other_crm_emails_keep_the_existing_template(): void
+    {
+        $user = User::factory()->create();
+        $mail = (new CrmNotification('Account approved', 'Your account is active.'))->toMail($user);
+        $this->assertSame('Account approved', $mail->subject);
+        $this->assertSame(['Your account is active.'], $mail->introLines);
+        $this->assertNull($mail->view);
+    }
 }

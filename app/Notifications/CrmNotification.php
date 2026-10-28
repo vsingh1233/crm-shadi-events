@@ -72,6 +72,48 @@ class CrmNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        if ($this->followUpId) {
+            $followUp = FollowUp::with(['lead.owner', 'lead.creator', 'responsible'])->findOrFail($this->followUpId);
+            $lead = $followUp->lead;
+            $timezone = config('crm.timezone');
+            $overdue = $followUp->due_at->lt(now()->subMinute());
+            $heading = $overdue ? 'Your follow-up is overdue' : 'Your follow-up is due';
+            $details = [
+                'Client' => $lead->name,
+                'Couple name' => $lead->couple_name,
+                'Phone' => $lead->phone,
+                'Email' => $lead->email,
+                'Client location' => $lead->client_location,
+                'Wedding location' => $lead->wedding_location,
+                'Wedding start' => $lead->wedding_start_date?->format('d M Y'),
+                'Wedding end' => $lead->wedding_end_date?->format('d M Y'),
+                'Stage' => Lead::STATUSES[$lead->status] ?? $lead->status,
+                'Lead quality' => Lead::TEMPERATURES[$lead->temperature] ?? 'Unassessed',
+                'Owner' => $lead->owner?->name,
+                'Created by' => $lead->creator?->name,
+                'Source' => ucfirst($lead->source ?? ''),
+                'Created (IST)' => $lead->created_at?->copy()->timezone($timezone)->format('d M Y, H:i'),
+                'Updated (IST)' => $lead->updated_at?->copy()->timezone($timezone)->format('d M Y, H:i'),
+            ];
+
+            return (new MailMessage)
+                ->subject('Follow-up '.($overdue ? 'overdue' : 'due').': '.($lead->couple_name ? $lead->couple_name.' · ' : '').$lead->name)
+                ->view(['html' => 'emails.follow-up-reminder', 'text' => 'emails.follow-up-reminder-text'], [
+                    'heading' => $heading,
+                    'overdue' => $overdue,
+                    'recipientName' => $followUp->responsible?->name ?? $notifiable->name,
+                    'clientName' => $lead->name,
+                    'coupleName' => $lead->couple_name,
+                    'dueAt' => $followUp->due_at->copy()->timezone($timezone)->format('d M Y, H:i').' IST',
+                    'notes' => $followUp->notes,
+                    'details' => $details,
+                    'leadUrl' => route('leads.show', $lead),
+                    'phoneUrl' => $lead->phone ? 'tel:'.preg_replace('/[^0-9+]/', '', $lead->phone) : null,
+                    'emailUrl' => $lead->email ? 'mailto:'.$lead->email : null,
+                    'logoUrl' => asset('logo.webp'),
+                ]);
+        }
+
         return (new MailMessage)->subject($this->title)->greeting('Hello '.$notifiable->name)->line($this->message)->action('Open ShadiEvents CRM', $this->leadId ? route('leads.show', $this->leadId) : route('dashboard'));
     }
 }
